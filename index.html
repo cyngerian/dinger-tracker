@@ -61,9 +61,13 @@
         <h2 class="text-xl font-bold text-yellow-400 mb-4 text-center">Add Home Run Bet</h2>
         <form id="bet-form" class="space-y-4">
           <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1">Bet Date</label>
+            <input type="date" id="bet-date" required class="w-full bg-slate-700 text-white px-3 py-2.5 rounded-md border border-slate-600 focus:border-yellow-400 focus:outline-none h-10">
+          </div>
+          <div>
             <label class="block text-sm font-medium text-gray-300 mb-1">Bettor Name</label>
             <div class="relative">
-              <input type="text" id="bettor-name" required autocomplete="off" class="w-full bg-slate-700 text-white px-3 py-2 rounded-md border border-slate-600 focus:border-yellow-400 focus:outline-none" placeholder="Enter bettor name...">
+              <input type="text" id="bettor-name" required autocomplete="off" class="w-full bg-slate-700 text-white px-3 py-2.5 rounded-md border border-slate-600 focus:border-yellow-400 focus:outline-none h-10" placeholder="Enter bettor name...">
               <div id="bettor-dropdown" class="hidden absolute z-10 w-full mt-1 bg-slate-700 border border-slate-600 rounded-md max-h-40 overflow-y-auto">
                 <div id="bettor-list"></div>
               </div>
@@ -72,7 +76,7 @@
           <div>
             <label class="block text-sm font-medium text-gray-300 mb-1">Batter Name</label>
             <div class="relative">
-              <input type="text" id="batter-name" required autocomplete="off" class="w-full bg-slate-700 text-white px-3 py-2 rounded-md border border-slate-600 focus:border-yellow-400 focus:outline-none" placeholder="Search for player...">
+              <input type="text" id="batter-name" required autocomplete="off" class="w-full bg-slate-700 text-white px-3 py-2.5 rounded-md border border-slate-600 focus:border-yellow-400 focus:outline-none h-10" placeholder="Search for player...">
               <div id="player-dropdown" class="hidden absolute z-10 w-full mt-1 bg-slate-700 border border-slate-600 rounded-md max-h-60 overflow-y-auto">
                 <div id="player-loading" class="hidden p-3 text-center text-gray-400">Loading players...</div>
                 <div id="player-list"></div>
@@ -80,23 +84,19 @@
             </div>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-300 mb-1">Bet Date</label>
-            <input type="date" id="bet-date" required class="w-full bg-slate-700 text-white px-3 py-2 rounded-md border border-slate-600 focus:border-yellow-400 focus:outline-none">
-          </div>
-          <div>
             <label class="block text-sm font-medium text-gray-300 mb-1">Bet Amount ($)</label>
-            <input type="number" id="bet-amount" required min="0" step="0.01" class="w-full bg-slate-700 text-white px-3 py-2 rounded-md border border-slate-600 focus:border-yellow-400 focus:outline-none">
+            <input type="number" id="bet-amount" required min="0" step="0.01" class="w-full bg-slate-700 text-white px-3 py-2.5 rounded-md border border-slate-600 focus:border-yellow-400 focus:outline-none h-10">
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-300 mb-1">Odds</label>
             <div class="relative">
               <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">+</span>
-              <input type="number" id="bet-odds" required min="100" step="1" class="w-full bg-slate-700 text-white pl-8 pr-3 py-2 rounded-md border border-slate-600 focus:border-yellow-400 focus:outline-none" placeholder="150">
+              <input type="number" id="bet-odds" required min="100" step="1" class="w-full bg-slate-700 text-white pl-8 pr-3 py-2.5 rounded-md border border-slate-600 focus:border-yellow-400 focus:outline-none h-10" placeholder="150">
             </div>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-300 mb-1">Sportsbook</label>
-            <select id="sportsbook" required class="w-full bg-slate-700 text-white px-3 py-2 rounded-md border border-slate-600 focus:border-yellow-400 focus:outline-none">
+            <select id="sportsbook" required class="w-full bg-slate-700 text-white px-3 py-2.5 rounded-md border border-slate-600 focus:border-yellow-400 focus:outline-none h-10">
               <option value="">Select sportsbook...</option>
               <option value="DraftKings">DraftKings</option>
               <option value="FanDuel">FanDuel</option>
@@ -117,7 +117,7 @@
         <div class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-300 mb-1">Calculate Date</label>
-            <input type="date" id="payout-date" required class="w-full bg-slate-700 text-white px-3 py-2 rounded-md border border-slate-600 focus:border-yellow-400 focus:outline-none">
+            <input type="date" id="payout-date" required class="w-full bg-slate-700 text-white px-3 py-2.5 rounded-md border border-slate-600 focus:border-yellow-400 focus:outline-none h-10">
           </div>
           <button id="calculate-payouts" class="w-full bg-green-500 text-white font-semibold py-2 rounded-md hover:bg-green-400 transition">Calculate Payouts</button>
         </div>
@@ -209,22 +209,22 @@
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-300 mb-1">Bet Date</label>
-              <input type="date" id="edit-bet-date" required class="w-full bg-slate-700 text-white px-3 py-2 rounded-md border border-slate-600 focus:border-yellow-400 focus:outline-none">
+              <input type="date" id="edit-bet-date" required class="w-full bg-slate-700 text-white px-3 py-2.5 rounded-md border border-slate-600 focus:border-yellow-400 focus:outline-none h-10">
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-300 mb-1">Bet Amount ($)</label>
-              <input type="number" id="edit-bet-amount" required min="0" step="0.01" class="w-full bg-slate-700 text-white px-3 py-2 rounded-md border border-slate-600 focus:border-yellow-400 focus:outline-none">
+              <input type="number" id="edit-bet-amount" required min="0" step="0.01" class="w-full bg-slate-700 text-white px-3 py-2.5 rounded-md border border-slate-600 focus:border-yellow-400 focus:outline-none h-10">
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-300 mb-1">Odds</label>
               <div class="relative">
                 <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">+</span>
-                <input type="number" id="edit-bet-odds" required min="100" step="1" class="w-full bg-slate-700 text-white pl-8 pr-3 py-2 rounded-md border border-slate-600 focus:border-yellow-400 focus:outline-none" placeholder="150">
+                <input type="number" id="edit-bet-odds" required min="100" step="1" class="w-full bg-slate-700 text-white pl-8 pr-3 py-2.5 rounded-md border border-slate-600 focus:border-yellow-400 focus:outline-none h-10" placeholder="150">
               </div>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-300 mb-1">Sportsbook</label>
-              <select id="edit-sportsbook" required class="w-full bg-slate-700 text-white px-3 py-2 rounded-md border border-slate-600 focus:border-yellow-400 focus:outline-none">
+              <select id="edit-sportsbook" required class="w-full bg-slate-700 text-white px-3 py-2.5 rounded-md border border-slate-600 focus:border-yellow-400 focus:outline-none h-10">
                 <option value="">Select sportsbook...</option>
                 <option value="DraftKings">DraftKings</option>
                 <option value="FanDuel">FanDuel</option>
@@ -1018,34 +1018,36 @@
 
       const actionButtons = isHidden ?
         `<button onclick="unhideBet(${bet.id})" class="text-blue-400 hover:text-blue-300 text-sm mr-2">Show</button>
-         <button onclick="showConfirmationModal(${bet.id})" class="text-red-400 hover:text-red-300 text-sm">✕</button>` :
+         <button onclick="showConfirmationModal(${bet.id})" class="text-red-400 hover:text-red-300 text-sm">Delete</button>` :
         bet.status === 'active' ?
         `<button onclick="showEditModal(${bet.id})" class="text-blue-400 hover:text-blue-300 text-sm mr-2">Edit</button>
          <button onclick="hideBet(${bet.id})" class="text-gray-400 hover:text-gray-300 text-sm mr-2">Hide</button>
-         <button onclick="showConfirmationModal(${bet.id})" class="text-red-400 hover:text-red-300 text-sm">✕</button>` :
+         <button onclick="showConfirmationModal(${bet.id})" class="text-red-400 hover:text-red-300 text-sm">Delete</button>` :
         `<button onclick="hideBet(${bet.id})" class="text-gray-400 hover:text-gray-300 text-sm mr-2">Hide</button>
-         <button onclick="showConfirmationModal(${bet.id})" class="text-red-400 hover:text-red-300 text-sm">✕</button>`;
+         <button onclick="showConfirmationModal(${bet.id})" class="text-red-400 hover:text-red-300 text-sm">Delete</button>`;
 
       const playerDisplay = bet.batterTeam ? `${bet.batter} (${bet.batterTeam})` : bet.batter;
       
       card.innerHTML = `
-        <div class="relative mb-2">
-          <div class="absolute inset-x-0 top-0 flex justify-center">
+        <div class="mb-3">
+          <div class="flex justify-between items-center mb-2">
+            <div class="font-bold text-xl text-yellow-400">${bet.bettor}</div>
             <div class="font-bold text-xl text-yellow-400">${bet.betDate}</div>
+            <div class="flex items-center gap-2">
+              ${statusBadge}
+            </div>
           </div>
           <div class="flex justify-between items-start">
             <div>
-              <div class="font-bold text-yellow-400">${bet.bettor}</div>
-              <div class="text-base text-gray-300">betting on <span class="font-bold text-lg">${playerDisplay}</span></div>
+              <div class="text-base text-gray-300"><span class="font-bold text-lg">${playerDisplay}</span></div>
               <div class="text-xs text-gray-500">${bet.sportsbook}</div>
             </div>
-            <div class="flex items-center gap-2">
-              ${statusBadge}
+            <div class="flex flex-col gap-1">
               ${actionButtons}
             </div>
           </div>
         </div>
-        <div class="grid grid-cols-3 gap-4 text-sm">
+        <div class="grid grid-cols-3 gap-4 text-base">
           <span class="text-gray-400">Bet: <span class="text-white font-semibold">$${bet.amount}</span></span>
           <span class="text-gray-400 text-center">Odds: <span class="text-white font-semibold">${bet.odds}</span></span>
           <span class="text-gray-400 text-right">To Win: <span class="text-green-400 font-semibold">$${potentialWin.toFixed(2)}</span></span>
