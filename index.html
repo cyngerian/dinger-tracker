@@ -350,40 +350,82 @@
               + (hr.pitcherLogo ? '<div class="bg-white rounded p-1"><img src="'+hr.pitcherLogo+'" class="w-8 h-8"></div>' : '')
             + '</div>'
           + '</div>'
-          + '<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 text-center mt-4">'
-            + '<div class="bg-slate-700 rounded-lg p-3"><div class="text-gray-400 text-sm">EV</div><div class="font-bold text-lg">'+(hr.hit.ev||'N/A')+' mph</div></div>'
-            + '<div class="bg-slate-700 rounded-lg p-3"><div class="text-gray-400 text-sm">LA</div><div class="font-bold text-lg">'+(hr.hit.la||'N/A')+'°</div></div>'
-            + '<div class="bg-slate-700 rounded-lg p-3"><div class="text-gray-400 text-sm">Dist</div><div class="font-bold text-lg">'+(hr.hit.dist||'N/A')+' ft</div></div>'
-            + '<div class="bg-slate-700 rounded-lg p-3"><div class="text-gray-400 text-sm">Pitch</div><div class="font-bold text-lg">'+(hr.pitcher.pitchType||'N/A')+'</div></div>'
-            + '<div class="bg-slate-700 rounded-lg p-3"><div class="text-gray-400 text-sm">Velo</div><div class="font-bold text-lg">'+(hr.pitcher.pitchSpeed||'N/A')+' mph</div></div>'
-          + '</div>';
+          + (() => {
+            const stats = [];
+            if (hr.hit.ev && hr.hit.ev !== 'N/A') {
+              stats.push('<div class="bg-slate-700 rounded-lg p-1 sm:p-2 lg:p-3"><div class="text-gray-400 text-xs sm:text-sm">EV</div><div class="font-bold text-sm sm:text-base lg:text-lg">'+hr.hit.ev+' mph</div></div>');
+            }
+            if (hr.hit.la && hr.hit.la !== 'N/A') {
+              stats.push('<div class="bg-slate-700 rounded-lg p-1 sm:p-2 lg:p-3"><div class="text-gray-400 text-xs sm:text-sm">LA</div><div class="font-bold text-sm sm:text-base lg:text-lg">'+hr.hit.la+'°</div></div>');
+            }
+            if (hr.hit.dist && hr.hit.dist !== 'N/A') {
+              stats.push('<div class="bg-slate-700 rounded-lg p-1 sm:p-2 lg:p-3"><div class="text-gray-400 text-xs sm:text-sm">Dist</div><div class="font-bold text-sm sm:text-base lg:text-lg">'+hr.hit.dist+' ft</div></div>');
+            }
+            if (hr.pitcher.pitchType && hr.pitcher.pitchType !== 'N/A' && hr.pitcher.pitchType !== 'Unknown') {
+              stats.push('<div class="bg-slate-700 rounded-lg p-1 sm:p-2 lg:p-3"><div class="text-gray-400 text-xs sm:text-sm">Pitch</div><div class="font-bold text-sm sm:text-base lg:text-lg">'+hr.pitcher.pitchType+'</div></div>');
+            }
+            if (hr.pitcher.pitchSpeed && hr.pitcher.pitchSpeed !== 'N/A') {
+              stats.push('<div class="bg-slate-700 rounded-lg p-1 sm:p-2 lg:p-3"><div class="text-gray-400 text-xs sm:text-sm">Velo</div><div class="font-bold text-sm sm:text-base lg:text-lg">'+hr.pitcher.pitchSpeed+' mph</div></div>');
+            }
+            
+            if (stats.length > 0) {
+              const gridCols = stats.length === 1 ? 'grid-cols-1' :
+                              stats.length === 2 ? 'grid-cols-2' :
+                              stats.length === 3 ? 'grid-cols-3' :
+                              stats.length === 4 ? 'grid-cols-4' : 'grid-cols-5';
+              return '<div class="grid '+gridCols+' gap-1 sm:gap-2 lg:gap-3 text-center mt-4">' + stats.join('') + '</div>';
+            } else {
+              return '';
+            }
+          })();
         hrList.appendChild(card);
       });
     }
 
     function renderSummaryStats(all) {
       hrCountEl.textContent = all.length;
-      const withEV = all.filter(h => h.hit.ev);
-      const avg = withEV.length? (withEV.reduce((s,h)=>s+h.hit.ev,0) / withEV.length).toFixed(1) : 'N/A';
-      avgExitVelocityEl.textContent = avg;
       
-      // Calculate time since last dinger
-      const timeSinceEl = document.getElementById('time-since-last');
-      if (all.length > 0) {
-        const latestHR = all[0]; // Already sorted by timestamp descending
-        const latestTime = new Date(latestHR.hrTimestamp);
-        const now = new Date();
-        const diffMs = now - latestTime;
-        const diffMins = Math.floor(diffMs / (1000 * 60));
-        const diffHours = Math.floor(diffMins / 60);
+      // Show/hide avg exit velocity based on data availability
+      const withEV = all.filter(h => h.hit.ev && h.hit.ev !== 'N/A');
+      const avgExitVelocityContainer = avgExitVelocityEl.parentElement;
+      
+      if (withEV.length > 0) {
+        const avg = (withEV.reduce((s,h)=>s+h.hit.ev,0) / withEV.length).toFixed(1);
+        avgExitVelocityEl.textContent = avg;
+        avgExitVelocityContainer.style.display = 'block';
+      } else {
+        avgExitVelocityContainer.style.display = 'none';
+      }
+      
+      // Show/hide time since last based on selected date
+      const selectedDate = dateSelector.value;
+      const today = new Date();
+      const todayStr = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString().split('T')[0];
+      const timeSinceContainer = document.getElementById('time-since-last').parentElement;
+      
+      if (selectedDate === todayStr) {
+        timeSinceContainer.style.display = 'block';
         
-        if (diffHours > 0) {
-          timeSinceEl.textContent = `${diffHours}h ${diffMins % 60}m`;
+        // Calculate time since last dinger
+        const timeSinceEl = document.getElementById('time-since-last');
+        if (all.length > 0) {
+          const latestHR = all[0]; // Already sorted by timestamp descending
+          const latestTime = new Date(latestHR.hrTimestamp);
+          const now = new Date();
+          const diffMs = now - latestTime;
+          const diffMins = Math.floor(diffMs / (1000 * 60));
+          const diffHours = Math.floor(diffMins / 60);
+          
+          if (diffHours > 0) {
+            timeSinceEl.textContent = `${diffHours}h ${diffMins % 60}m`;
+          } else {
+            timeSinceEl.textContent = `${diffMins}m`;
+          }
         } else {
-          timeSinceEl.textContent = `${diffMins}m`;
+          timeSinceEl.textContent = 'N/A';
         }
       } else {
-        timeSinceEl.textContent = 'N/A';
+        timeSinceContainer.style.display = 'none';
       }
     }
 
