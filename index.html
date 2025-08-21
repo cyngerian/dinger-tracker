@@ -362,7 +362,8 @@
               stats.push('<div class="bg-slate-700 rounded-lg p-1 sm:p-2 lg:p-3"><div class="text-gray-400 text-xs sm:text-sm">Dist</div><div class="font-bold text-sm sm:text-base lg:text-lg">'+hr.hit.dist+' ft</div></div>');
             }
             if (hr.pitcher.pitchType && hr.pitcher.pitchType !== 'N/A' && hr.pitcher.pitchType !== 'Unknown') {
-              stats.push('<div class="bg-slate-700 rounded-lg p-1 sm:p-2 lg:p-3"><div class="text-gray-400 text-xs sm:text-sm">Pitch</div><div class="font-bold text-sm sm:text-base lg:text-lg">'+hr.pitcher.pitchType+'</div></div>');
+              const pitchTextSize = hr.pitcher.pitchType.length > 8 ? 'text-xs' : hr.pitcher.pitchType.length > 6 ? 'text-xs sm:text-sm' : 'text-sm sm:text-base lg:text-lg';
+              stats.push('<div class="bg-slate-700 rounded-lg p-1 sm:p-2 lg:p-3"><div class="text-gray-400 text-xs sm:text-sm">Pitch</div><div class="font-bold '+pitchTextSize+'">'+hr.pitcher.pitchType+'</div></div>');
             }
             if (hr.pitcher.pitchSpeed && hr.pitcher.pitchSpeed !== 'N/A') {
               stats.push('<div class="bg-slate-700 rounded-lg p-1 sm:p-2 lg:p-3"><div class="text-gray-400 text-xs sm:text-sm">Velo</div><div class="font-bold text-sm sm:text-base lg:text-lg">'+hr.pitcher.pitchSpeed+' mph</div></div>');
