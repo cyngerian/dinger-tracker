@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dinger Tracker</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #0f172a;
+      color: white;
+    }
+    .stat-box {
+      @apply bg-slate-800 rounded-lg p-2 flex flex-col items-center justify-center text-center;
+    }
+    .stat-label {
+      @apply text-xs text-gray-400;
+    }
+    .stat-value {
+      @apply text-base font-semibold;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+  <header class="bg-slate-900 py-4 shadow-lg">
+    <h1 class="text-center text-4xl font-bold text-yellow-400">Dinger Tracker</h1>
+  </header>
+
+  <main class="container mx-auto px-4 py-6 flex-1">
+    <!-- Date Selector -->
+    <div class="flex flex-col sm:flex-row sm:justify-center gap-3 mb-6">
+      <input type="date" id="date-selector" class="bg-slate-800 text-white px-3 py-2 rounded-md border border-slate-700">
+      <button id="fetch-button" class="bg-yellow-500 text-black font-semibold px-4 py-2 rounded-md hover:bg-yellow-400">Get Dingers</button>
+    </div>
+
+    <!-- Last Updated -->
+    <div id="last-updated" class="hidden text-center text-xs text-gray-500 mb-6"></div>
+
+    <!-- Loading -->
+    <div id="loading-state" class="hidden text-center text-gray-400 mb-6">Loading dingers...</div>
+    <div id="error-message" class="hidden text-center text-red-500 font-semibold mb-6">Failed to load data. Please try again.</div>
+
+    <!-- Summary -->
+    <div id="summary-section" class="hidden flex justify-center gap-4 mb-6">
+      <div class="bg-slate-800 rounded-lg p-4 text-center">
+        <div class="text-xs text-gray-400">Total HRs</div>
+        <div id="hr-count" class="text-xl font-bold">0</div>
+      </div>
+      <div class="bg-slate-800 rounded-lg p-4 text-center">
+        <div class="text-xs text-gray-400">Avg Exit Velo</div>
+        <div id="avg-exit-velocity" class="text-xl font-bold">0</div>
+      </div>
+      <div class="bg-slate-800 rounded-lg p-4 text-center">
+        <div class="text-xs text-gray-400">Time Since Last</div>
+        <div id="time-since-last" class="text-xl font-bold">N/A</div>
+      </div>
+    </div>
+
+    <!-- Home Runs -->
+    <div id="hr-list" class="hidden space-y-4"></div>
+  </main>
+
+  <script>
+    const dateSelector = document.getElementById('date-selector');
+    const fetchButton = document.getElementById('fetch-button');
+    const hrList = document.getElementById('hr-list');
+    const hrCountEl = document.getElementById('hr-count');
+    const avgExitVelocityEl = document.getElementById('avg-exit-velocity');
+    const summarySection = document.getElementById('summary-section');
+    const loadingState = document.getElementById('loading-state');
+    const errorMessage = document.getElementById('error-message');
+
+    const today = new Date();
+    const localISODate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const todayStr = localISODate.toISOString().split('T')[0];
+    dateSelector.value = todayStr;
+
+    fetchButton.addEventListener('click', getDingerData);
+
+    // Cache management
+    const CACHE_DURATION = 15 * 60 * 1000; // 15 minutes
+    
+    function getCacheKey(date) {
+      return `dingers_${date}`;
+    }
+    
+    function getCachedData(date) {
+      const cacheKey = getCacheKey(date);
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        const data = JSON.parse(cached);
+        if (Date.now() - data.timestamp < CACHE_DURATION) {
+          return data.homers;
+        }
+        localStorage.removeItem(cacheKey);
+      }
+      return null;
+    }
+    
+    function setCachedData(date, homers) {
+      const cacheKey = getCacheKey(date);
+      localStorage.setItem(cacheKey, JSON.stringify({
+        timestamp: Date.now(),
+        homers: homers
+      }));
+    }
+
+    async function getDingerData() {
+      const selectedDate = dateSelector.value;
+      
+      loadingState.classList.remove('hidden');
+      errorMessage.classList.add('hidden');
+      summarySection.classList.add('hidden');
+      hrList.classList.add('hidden');
+
+      try {
+        // Check cache first
+        const cachedHomers = getCachedData(selectedDate);
+        if (cachedHomers) {
+          console.log("Using cached data");
+          renderSummaryStats(cachedHomers);
+          renderHomeRuns(cachedHomers);
+          updateLastUpdated();
+          
+          loadingState.classList.add('hidden');
+          summarySection.classList.remove('hidden');
+          hrList.classList.remove('hidden');
+          document.getElementById('last-updated').classList.remove('hidden');
+          return;
+        }
+
+        const scheduleUrl = `https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${selectedDate}`;
+        const scheduleResp = await fetch(scheduleUrl);
+        const scheduleData = await scheduleResp.json();
+
+        // Collect all game URLs for parallel fetching
+        const gameUrls = [];
+        for (const date of scheduleData.dates) {
+          for (const game of date.games) {
+            gameUrls.push(`https://statsapi.mlb.com/api/v1.1/game/${game.gamePk}/feed/live`);
+          }
+        }
+
+        // Fetch all games in parallel
+        const gamePromises = gameUrls.map(url => fetch(url).then(r => r.json()));
+        const gameDataArray = await Promise.all(gamePromises);
+
+        const allHomers = [];
+        
+        // Process all games
+        for (const gameData of gameDataArray) {
+          const plays = gameData.liveData.plays.allPlays;
+          const homeTeam = gameData.gameData?.teams?.home || {};
+          const awayTeam = gameData.gameData?.teams?.away || {};
+
+          for (const play of plays) {
+            if (play.result.event === "Home Run" && play.matchup?.batter && play.matchup?.pitcher) {
+              const batter = play.matchup.batter;
+              const pitcher = play.matchup.pitcher;
+              const runners = play.runners || [];
+              let hitData = {};
+              const hitEvent = play.playEvents?.find(event => event.hitData);
+              if (hitEvent?.hitData) hitData = hitEvent.hitData;
+
+              let pitchData = {};
+              const pitchEvents = play.playEvents?.filter(event => event.isPitch && event.pitchData) || [];
+              if (pitchEvents.length > 0) {
+                const finalPitch = pitchEvents[pitchEvents.length - 1];
+                pitchData = finalPitch.pitchData || {};
+              }
+
+              const isTopInning = play.about?.isTopInning;
+              const batterTeam = isTopInning ? awayTeam : homeTeam;
+              const pitcherTeam = isTopInning ? homeTeam : awayTeam;
+
+              const hrObj = {
+                batter: {
+                  id: batter.id,
+                  name: batter.fullName || 'Unknown',
+                  handedness: play.matchup.batSide?.code || 'N/A',
+                  homeRunCount: null
+                },
+                pitcher: {
+                  id: pitcher.id,
+                  name: pitcher.fullName || 'Unknown',
+                  handedness: play.matchup.pitchHand?.code || 'N/A',
+                  hrPer9: null,
+                  pitchType: pitchData.type?.description || play.playEvents?.find(event => event.isPitch)?.details?.type?.description || 'Unknown',
+                  pitchSpeed: pitchData.startSpeed || null
+                },
+                hit: { ev: hitData.launchSpeed || null, la: hitData.launchAngle || null, dist: hitData.totalDistance || null },
+                scenario: {
+                  inning: play.about?.inning || 'N/A',
+                  outs: play.count?.outs || 0,
+                  runnersOn: (() => {
+                    const bases = [];
+                    if (runners && runners.length > 0) {
+                      for (const r of runners) {
+                        const start = r.movement?.start;
+                        if (start === "1B" || start === "2B" || start === "3B") {
+                          bases.push(start);
+                        }
+                      }
+                      
+                      if (bases.length === 0) {
+                        const playDesc = play.result?.description || "";
+                        if (playDesc.includes("2-run") || playDesc.includes("two-run")) {
+                          bases.push("1B");
+                        }
+                        if (playDesc.includes("3-run") || playDesc.includes("three-run")) {
+                          bases.push("1B", "2B");
+                        }
+                        if (playDesc.includes("grand slam")) {
+                          bases.push("1B", "2B", "3B");
+                        }
+                      }
+                    }
+                    return bases;
+                  })(),
+                  count: (play.count?.balls || 0) + "-" + (play.count?.strikes || 0)
+                },
+                hrTimestamp: play.about?.startTime || null,
+                batterLogo: batterTeam.id ? "https://www.mlbstatic.com/team-logos/" + batterTeam.id + ".svg" : '',
+                pitcherLogo: pitcherTeam.id ? "https://www.mlbstatic.com/team-logos/" + pitcherTeam.id + ".svg" : ''
+              };
+              
+              allHomers.push(hrObj);
+            }
+          }
+        }
+
+        allHomers.sort((a,b) => new Date(b.hrTimestamp).getTime() - new Date(a.hrTimestamp).getTime() );
+
+        // Fetch player stats in parallel
+        const uniqueBatters = [...new Set(allHomers.map(hr => hr.batter.id))];
+        const uniquePitchers = [...new Set(allHomers.map(hr => hr.pitcher.id))];
+        
+        const batterStatsPromises = uniqueBatters.map(async (batterId) => {
+          try {
+            const resp = await fetch(`https://statsapi.mlb.com/api/v1/people/${batterId}/stats?stats=season&group=hitting`);
+            if (resp.ok) {
+              const data = await resp.json();
+              const seasonStats = data.stats?.find(stat => stat.type?.displayName === 'season');
+              return { id: batterId, homeRuns: seasonStats?.splits?.[0]?.stat?.homeRuns || null };
+            }
+          } catch(e) {
+            console.warn("Error fetching batter stats", e);
+          }
+          return { id: batterId, homeRuns: null };
+        });
+
+        const pitcherStatsPromises = uniquePitchers.map(async (pitcherId) => {
+          try {
+            const resp = await fetch(`https://statsapi.mlb.com/api/v1/people/${pitcherId}/stats?stats=season&group=pitching`);
+            if (resp.ok) {
+              const data = await resp.json();
+              const seasonStats = data.stats?.find(stat => stat.type?.displayName === 'season');
+              return { id: pitcherId, hrPer9: seasonStats?.splits?.[0]?.stat?.homeRunsPer9 || null };
+            }
+          } catch(e) {
+            console.warn("Error fetching pitcher stats", e);
+          }
+          return { id: pitcherId, hrPer9: null };
+        });
+
+        const [batterStats, pitcherStats] = await Promise.all([
+          Promise.all(batterStatsPromises),
+          Promise.all(pitcherStatsPromises)
+        ]);
+
+        // Apply stats to home runs
+        const batterStatsMap = new Map(batterStats.map(b => [b.id, b.homeRuns]));
+        const pitcherStatsMap = new Map(pitcherStats.map(p => [p.id, p.hrPer9]));
+
+        allHomers.forEach(hr => {
+          hr.batter.homeRunCount = batterStatsMap.get(hr.batter.id) || 'N/A';
+          hr.pitcher.hrPer9 = pitcherStatsMap.get(hr.pitcher.id) || 'N/A';
+        });
+
+        // Cache the results
+        setCachedData(selectedDate, allHomers);
+
+        renderSummaryStats(allHomers);
+        renderHomeRuns(allHomers);
+        updateLastUpdated();
+
+        loadingState.classList.add('hidden');
+        summarySection.classList.remove('hidden');
+        hrList.classList.remove('hidden');
+        document.getElementById('last-updated').classList.remove('hidden');
+      } catch {
+        loadingState.classList.add('hidden');
+        errorMessage.classList.remove('hidden');
+      }
+    }
+
+    function renderHomeRuns(data) {
+      hrList.innerHTML = '';
+      data.forEach(hr => {
+        const card = document.createElement('div');
+        card.className = "bg-slate-800 p-4 rounded-lg hover:scale-[1.01] transition";
+        const timeStr = hr.hrTimestamp ? new Date(hr.hrTimestamp).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : 'N/A';
+
+        // For bases, show tighter diamond (1B,2B,3B) using flexbox
+        const bases = '<div class="flex flex-col items-center text-center text-xs">'
+                    + '<div><span class="w-2.5 h-2.5 rounded-full ' + (hr.scenario.runnersOn.includes("2B")?'bg-yellow-400':'bg-slate-600') + ' inline-block"></span></div>'
+                    + '<div class="flex justify-between w-12">'
+                    + '<span class="w-2.5 h-2.5 rounded-full ' + (hr.scenario.runnersOn.includes("3B")?'bg-yellow-400':'bg-slate-600') + ' inline-block"></span>'
+                    + '<span class="w-2.5 h-2.5 rounded-full ' + (hr.scenario.runnersOn.includes("1B")?'bg-yellow-400':'bg-slate-600') + ' inline-block"></span>'
+                    + '</div>'
+                    + '</div>';
+
+        // Outs as 3 small red/gray circles in a row
+        const outs = '<div class="flex gap-1">'
+                   + [0,1,2].map(i => '<span class="w-2 h-2 rounded-full ' + (hr.scenario.outs>i?'bg-red-500':'bg-slate-600') + ' inline-block"></span>').join('')
+                   + '</div>';
+
+        card.innerHTML = ''
+          + '<div class="grid grid-cols-3 gap-4 items-center mb-3">'
+            + '<div class="flex items-center gap-2" style="margin-left: 60px;">'
+              + (hr.batterLogo ? '<div class="bg-white rounded p-1"><img src="'+hr.batterLogo+'" class="w-8 h-8"></div>' : '')
+              + '<div>'
+                + '<div class="font-bold text-yellow-400">'+hr.batter.name+'</div>'
+                + '<div class="text-xs text-gray-400">'+hr.batter.handedness+' | HR: '+(hr.batter.homeRunCount || 'N/A')+'</div>'
+              + '</div>'
+            + '</div>'
+            + '<div class="flex flex-col items-center text-xs text-gray-400 gap-1">'
+              + '<div class="flex items-center gap-2">'
+                + '<span class="text-gray-500">⏱ '+timeStr+'</span>'
+                + '<span>'+hr.scenario.inning+(hr.scenario.inning.toString().endsWith('1') && hr.scenario.inning !== '11' ? 'st' : hr.scenario.inning.toString().endsWith('2') && hr.scenario.inning !== '12' ? 'nd' : hr.scenario.inning.toString().endsWith('3') && hr.scenario.inning !== '13' ? 'rd' : 'th')+' inning</span>'
+              + '</div>'
+              + '<div class="flex items-center gap-2">'
+                + bases
+                + outs
+                + '<span>'+hr.scenario.count+'</span>'
+              + '</div>'
+            + '</div>'
+            + '<div class="flex items-center gap-2 justify-end" style="margin-right: 60px;">'
+              + '<div class="text-right">'
+                + '<div class="font-bold text-white">'+hr.pitcher.name+'</div>'
+                + '<div class="text-xs text-gray-400">'+hr.pitcher.handedness+' | HR/9: '+(hr.pitcher.hrPer9 || 'N/A')+'</div>'
+              + '</div>'
+              + (hr.pitcherLogo ? '<div class="bg-white rounded p-1"><img src="'+hr.pitcherLogo+'" class="w-8 h-8"></div>' : '')
+            + '</div>'
+          + '</div>'
+          + '<div class="grid grid-cols-5 gap-3 text-center mt-4">'
+            + '<div class="bg-slate-700 rounded-lg p-3"><div class="text-gray-400 text-sm">EV</div><div class="font-bold text-lg">'+(hr.hit.ev||'N/A')+' mph</div></div>'
+            + '<div class="bg-slate-700 rounded-lg p-3"><div class="text-gray-400 text-sm">LA</div><div class="font-bold text-lg">'+(hr.hit.la||'N/A')+'°</div></div>'
+            + '<div class="bg-slate-700 rounded-lg p-3"><div class="text-gray-400 text-sm">Dist</div><div class="font-bold text-lg">'+(hr.hit.dist||'N/A')+' ft</div></div>'
+            + '<div class="bg-slate-700 rounded-lg p-3"><div class="text-gray-400 text-sm">Pitch</div><div class="font-bold text-lg">'+(hr.pitcher.pitchType||'N/A')+'</div></div>'
+            + '<div class="bg-slate-700 rounded-lg p-3"><div class="text-gray-400 text-sm">Velo</div><div class="font-bold text-lg">'+(hr.pitcher.pitchSpeed||'N/A')+' mph</div></div>'
+          + '</div>';
+        hrList.appendChild(card);
+      });
+    }
+
+    function renderSummaryStats(all) {
+      hrCountEl.textContent = all.length;
+      const withEV = all.filter(h => h.hit.ev);
+      const avg = withEV.length? (withEV.reduce((s,h)=>s+h.hit.ev,0) / withEV.length).toFixed(1) : 'N/A';
+      avgExitVelocityEl.textContent = avg;
+      
+      // Calculate time since last dinger
+      const timeSinceEl = document.getElementById('time-since-last');
+      if (all.length > 0) {
+        const latestHR = all[0]; // Already sorted by timestamp descending
+        const latestTime = new Date(latestHR.hrTimestamp);
+        const now = new Date();
+        const diffMs = now - latestTime;
+        const diffMins = Math.floor(diffMs / (1000 * 60));
+        const diffHours = Math.floor(diffMins / 60);
+        
+        if (diffHours > 0) {
+          timeSinceEl.textContent = `${diffHours}h ${diffMins % 60}m`;
+        } else {
+          timeSinceEl.textContent = `${diffMins}m`;
+        }
+      } else {
+        timeSinceEl.textContent = 'N/A';
+      }
+    }
+
+    function updateLastUpdated() {
+      const now = new Date();
+      const timeStr = now.toLocaleString();
+      document.getElementById('last-updated').textContent = `Last updated: ${timeStr}`;
+    }
+  </script>
+</body>
+</html>
