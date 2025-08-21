@@ -322,14 +322,39 @@
                    + [0,1,2].map(i => '<span class="w-2 h-2 rounded-full ' + (hr.scenario.outs>i?'bg-red-500':'bg-slate-600') + ' inline-block"></span>').join('')
                    + '</div>';
 
+        // Separate hitting and pitching stats for responsive layout
+        const hittingStats = [];
+        const pitchingStats = [];
+        
+        if (hr.hit.ev && hr.hit.ev !== 'N/A') {
+          hittingStats.push('<div class="bg-slate-700 rounded-lg p-1 sm:p-2 lg:p-3"><div class="text-gray-400 text-xs sm:text-sm">EV</div><div class="font-bold text-sm sm:text-base lg:text-lg">'+hr.hit.ev+' mph</div></div>');
+        }
+        if (hr.hit.la && hr.hit.la !== 'N/A') {
+          hittingStats.push('<div class="bg-slate-700 rounded-lg p-1 sm:p-2 lg:p-3"><div class="text-gray-400 text-xs sm:text-sm">LA</div><div class="font-bold text-sm sm:text-base lg:text-lg">'+hr.hit.la+'°</div></div>');
+        }
+        if (hr.hit.dist && hr.hit.dist !== 'N/A') {
+          hittingStats.push('<div class="bg-slate-700 rounded-lg p-1 sm:p-2 lg:p-3"><div class="text-gray-400 text-xs sm:text-sm">Dist</div><div class="font-bold text-sm sm:text-base lg:text-lg">'+hr.hit.dist+' ft</div></div>');
+        }
+        
+        if (hr.pitcher.pitchType && hr.pitcher.pitchType !== 'N/A' && hr.pitcher.pitchType !== 'Unknown') {
+          const pitchTextSize = hr.pitcher.pitchType.length > 8 ? 'text-xs' : hr.pitcher.pitchType.length > 6 ? 'text-xs sm:text-sm' : 'text-sm sm:text-base lg:text-lg';
+          pitchingStats.push('<div class="bg-slate-700 rounded-lg p-1 sm:p-2 lg:p-3"><div class="text-gray-400 text-xs sm:text-sm">Pitch</div><div class="font-bold '+pitchTextSize+'">'+hr.pitcher.pitchType+'</div></div>');
+        }
+        if (hr.pitcher.pitchSpeed && hr.pitcher.pitchSpeed !== 'N/A') {
+          pitchingStats.push('<div class="bg-slate-700 rounded-lg p-1 sm:p-2 lg:p-3"><div class="text-gray-400 text-xs sm:text-sm">Velo</div><div class="font-bold text-sm sm:text-base lg:text-lg">'+hr.pitcher.pitchSpeed+' mph</div></div>');
+        }
+
         card.innerHTML = ''
           + '<div class="flex flex-col md:grid md:grid-cols-3 gap-4 items-center mb-3">'
-            + '<div class="flex items-center gap-2 justify-center md:justify-start md:ml-4">'
-              + (hr.batterLogo ? '<div class="bg-white rounded p-1"><img src="'+hr.batterLogo+'" class="w-8 h-8"></div>' : '')
-              + '<div>'
-                + '<div class="font-bold text-yellow-400">'+hr.batter.name+'</div>'
-                + '<div class="text-xs text-gray-400">'+hr.batter.handedness+' | HR: '+(hr.batter.homeRunCount || 'N/A')+'</div>'
+            + '<div class="flex flex-col items-center gap-2">'
+              + '<div class="flex items-center gap-2 justify-center md:justify-start md:ml-4">'
+                + (hr.batterLogo ? '<div class="bg-white rounded p-1"><img src="'+hr.batterLogo+'" class="w-8 h-8"></div>' : '')
+                + '<div>'
+                  + '<div class="font-bold text-yellow-400">'+hr.batter.name+'</div>'
+                  + '<div class="text-xs text-gray-400">'+hr.batter.handedness+' | HR: '+(hr.batter.homeRunCount || 'N/A')+'</div>'
+                + '</div>'
               + '</div>'
+              + (hittingStats.length > 0 ? '<div class="md:hidden grid grid-cols-'+Math.min(hittingStats.length, 3)+' gap-1 text-center mt-2">' + hittingStats.join('') + '</div>' : '')
             + '</div>'
             + '<div class="flex flex-col items-center text-xs text-gray-400 gap-1">'
               + '<div class="flex items-center gap-2 flex-wrap justify-center">'
@@ -342,39 +367,25 @@
                 + '<span>'+hr.scenario.count+'</span>'
               + '</div>'
             + '</div>'
-            + '<div class="flex items-center gap-2 justify-center md:justify-end md:mr-4">'
-              + '<div class="text-center md:text-right">'
-                + '<div class="font-bold text-white">'+hr.pitcher.name+'</div>'
-                + '<div class="text-xs text-gray-400">'+hr.pitcher.handedness+' | HR/9: '+(hr.pitcher.hrPer9 || 'N/A')+'</div>'
+            + '<div class="flex flex-col items-center gap-2">'
+              + '<div class="flex items-center gap-2 justify-center md:justify-end md:mr-4">'
+                + '<div class="text-center md:text-right">'
+                  + '<div class="font-bold text-white">'+hr.pitcher.name+'</div>'
+                  + '<div class="text-xs text-gray-400">'+hr.pitcher.handedness+' | HR/9: '+(hr.pitcher.hrPer9 || 'N/A')+'</div>'
+                + '</div>'
+                + (hr.pitcherLogo ? '<div class="bg-white rounded p-1"><img src="'+hr.pitcherLogo+'" class="w-8 h-8"></div>' : '')
               + '</div>'
-              + (hr.pitcherLogo ? '<div class="bg-white rounded p-1"><img src="'+hr.pitcherLogo+'" class="w-8 h-8"></div>' : '')
+              + (pitchingStats.length > 0 ? '<div class="md:hidden grid grid-cols-'+Math.min(pitchingStats.length, 2)+' gap-1 text-center mt-2">' + pitchingStats.join('') + '</div>' : '')
             + '</div>'
           + '</div>'
           + (() => {
-            const stats = [];
-            if (hr.hit.ev && hr.hit.ev !== 'N/A') {
-              stats.push('<div class="bg-slate-700 rounded-lg p-1 sm:p-2 lg:p-3"><div class="text-gray-400 text-xs sm:text-sm">EV</div><div class="font-bold text-sm sm:text-base lg:text-lg">'+hr.hit.ev+' mph</div></div>');
-            }
-            if (hr.hit.la && hr.hit.la !== 'N/A') {
-              stats.push('<div class="bg-slate-700 rounded-lg p-1 sm:p-2 lg:p-3"><div class="text-gray-400 text-xs sm:text-sm">LA</div><div class="font-bold text-sm sm:text-base lg:text-lg">'+hr.hit.la+'°</div></div>');
-            }
-            if (hr.hit.dist && hr.hit.dist !== 'N/A') {
-              stats.push('<div class="bg-slate-700 rounded-lg p-1 sm:p-2 lg:p-3"><div class="text-gray-400 text-xs sm:text-sm">Dist</div><div class="font-bold text-sm sm:text-base lg:text-lg">'+hr.hit.dist+' ft</div></div>');
-            }
-            if (hr.pitcher.pitchType && hr.pitcher.pitchType !== 'N/A' && hr.pitcher.pitchType !== 'Unknown') {
-              const pitchTextSize = hr.pitcher.pitchType.length > 8 ? 'text-xs' : hr.pitcher.pitchType.length > 6 ? 'text-xs sm:text-sm' : 'text-sm sm:text-base lg:text-lg';
-              stats.push('<div class="bg-slate-700 rounded-lg p-1 sm:p-2 lg:p-3"><div class="text-gray-400 text-xs sm:text-sm">Pitch</div><div class="font-bold '+pitchTextSize+'">'+hr.pitcher.pitchType+'</div></div>');
-            }
-            if (hr.pitcher.pitchSpeed && hr.pitcher.pitchSpeed !== 'N/A') {
-              stats.push('<div class="bg-slate-700 rounded-lg p-1 sm:p-2 lg:p-3"><div class="text-gray-400 text-xs sm:text-sm">Velo</div><div class="font-bold text-sm sm:text-base lg:text-lg">'+hr.pitcher.pitchSpeed+' mph</div></div>');
-            }
-            
-            if (stats.length > 0) {
-              const gridCols = stats.length === 1 ? 'grid-cols-1' :
-                              stats.length === 2 ? 'grid-cols-2' :
-                              stats.length === 3 ? 'grid-cols-3' :
-                              stats.length === 4 ? 'grid-cols-4' : 'grid-cols-5';
-              return '<div class="grid '+gridCols+' gap-1 sm:gap-2 lg:gap-3 text-center mt-4">' + stats.join('') + '</div>';
+            const allStats = [...hittingStats, ...pitchingStats];
+            if (allStats.length > 0) {
+              const gridCols = allStats.length === 1 ? 'grid-cols-1' :
+                              allStats.length === 2 ? 'grid-cols-2' :
+                              allStats.length === 3 ? 'grid-cols-3' :
+                              allStats.length === 4 ? 'grid-cols-4' : 'grid-cols-5';
+              return '<div class="hidden md:grid '+gridCols+' gap-1 sm:gap-2 lg:gap-3 text-center mt-4">' + allStats.join('') + '</div>';
             } else {
               return '';
             }
