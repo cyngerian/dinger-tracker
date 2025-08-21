@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>Dinger Tracker</title>
 
   <!-- Google Fonts -->
@@ -84,34 +87,6 @@
 
     fetchButton.addEventListener('click', getDingerData);
 
-    // Cache management
-    const CACHE_DURATION = 15 * 60 * 1000; // 15 minutes
-    
-    function getCacheKey(date) {
-      return `dingers_${date}`;
-    }
-    
-    function getCachedData(date) {
-      const cacheKey = getCacheKey(date);
-      const cached = localStorage.getItem(cacheKey);
-      if (cached) {
-        const data = JSON.parse(cached);
-        if (Date.now() - data.timestamp < CACHE_DURATION) {
-          return data.homers;
-        }
-        localStorage.removeItem(cacheKey);
-      }
-      return null;
-    }
-    
-    function setCachedData(date, homers) {
-      const cacheKey = getCacheKey(date);
-      localStorage.setItem(cacheKey, JSON.stringify({
-        timestamp: Date.now(),
-        homers: homers
-      }));
-    }
-
     async function getDingerData() {
       const selectedDate = dateSelector.value;
       
@@ -121,20 +96,6 @@
       hrList.classList.add('hidden');
 
       try {
-        // Check cache first
-        const cachedHomers = getCachedData(selectedDate);
-        if (cachedHomers) {
-          console.log("Using cached data");
-          renderSummaryStats(cachedHomers);
-          renderHomeRuns(cachedHomers);
-          updateLastUpdated();
-          
-          loadingState.classList.add('hidden');
-          summarySection.classList.remove('hidden');
-          hrList.classList.remove('hidden');
-          document.getElementById('last-updated').classList.remove('hidden');
-          return;
-        }
 
         const scheduleUrl = `https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${selectedDate}`;
         const scheduleResp = await fetch(scheduleUrl);
@@ -283,9 +244,6 @@
           hr.batter.homeRunCount = batterStatsMap.get(hr.batter.id) || 'N/A';
           hr.pitcher.hrPer9 = pitcherStatsMap.get(hr.pitcher.id) || 'N/A';
         });
-
-        // Cache the results
-        setCachedData(selectedDate, allHomers);
 
         renderSummaryStats(allHomers);
         renderHomeRuns(allHomers);
