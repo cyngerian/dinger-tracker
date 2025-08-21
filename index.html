@@ -29,6 +29,26 @@
     .stat-value {
       @apply text-base font-semibold;
     }
+    
+    /* Force consistent date input sizing on all browsers, especially iOS Safari */
+    input[type="date"] {
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      width: 100% !important;
+      height: 2.5rem !important;
+      padding: 0.625rem 0.75rem !important;
+      font-size: 1rem !important;
+      line-height: 1.5 !important;
+      box-sizing: border-box !important;
+      border-radius: 0.375rem !important;
+    }
+    
+    /* Ensure date input doesn't expand beyond container */
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      opacity: 1;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
