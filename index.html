@@ -49,6 +49,19 @@
       opacity: 1;
       cursor: pointer;
     }
+    
+    /* Hide scrollbars for synchronized scrolling columns */
+    #forms-column::-webkit-scrollbar,
+    #bets-column::-webkit-scrollbar {
+      display: none;
+    }
+    
+    #forms-column,
+    #bets-column {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+      overflow-y: auto;
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -76,119 +89,128 @@
 
     <!-- Bets Section -->
     <div id="bets-section" class="hidden">
-      <!-- Bet Entry Form -->
-      <div class="bg-slate-800 rounded-lg p-6 mb-6 max-w-md mx-auto">
-        <h2 class="text-xl font-bold text-yellow-400 mb-4 text-center">Add Home Run Bet</h2>
-        <form id="bet-form" class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-300 mb-1">Bet Date</label>
-            <input type="date" id="bet-date" required class="w-full bg-slate-700 text-white px-3 py-2.5 rounded-md border border-slate-600 focus:border-yellow-400 focus:outline-none h-10">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-300 mb-1">Bettor Name</label>
-            <div class="relative">
-              <input type="text" id="bettor-name" required autocomplete="off" class="w-full bg-slate-700 text-white px-3 py-2.5 rounded-md border border-slate-600 focus:border-yellow-400 focus:outline-none h-10" placeholder="Enter bettor name...">
-              <div id="bettor-dropdown" class="hidden absolute z-10 w-full mt-1 bg-slate-700 border border-slate-600 rounded-md max-h-40 overflow-y-auto">
-                <div id="bettor-list"></div>
+      <!-- Desktop Two-Column Layout -->
+      <div class="lg:flex lg:justify-center lg:gap-6 lg:mx-auto" style="max-width: 105.8rem;">
+        <!-- Left Column: Forms -->
+        <div class="lg:w-96 lg:space-y-6 lg:sticky lg:top-6 lg:self-start" id="forms-column">
+          <!-- Bet Entry Form -->
+          <div class="bg-slate-800 rounded-lg p-6 mb-6 max-w-md mx-auto lg:max-w-none lg:mx-0">
+            <h2 class="text-xl font-bold text-yellow-400 mb-4 text-center">Add Home Run Bet</h2>
+            <form id="bet-form" class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Bet Date</label>
+                <input type="date" id="bet-date" required class="w-full bg-slate-700 text-white px-3 py-2.5 rounded-md border border-slate-600 focus:border-yellow-400 focus:outline-none h-10">
               </div>
-            </div>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-300 mb-1">Batter Name</label>
-            <div class="relative">
-              <input type="text" id="batter-name" required autocomplete="off" class="w-full bg-slate-700 text-white px-3 py-2.5 rounded-md border border-slate-600 focus:border-yellow-400 focus:outline-none h-10" placeholder="Search for player...">
-              <div id="player-dropdown" class="hidden absolute z-10 w-full mt-1 bg-slate-700 border border-slate-600 rounded-md max-h-60 overflow-y-auto">
-                <div id="player-loading" class="hidden p-3 text-center text-gray-400">Loading players...</div>
-                <div id="player-list"></div>
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Bettor Name</label>
+                <div class="relative">
+                  <input type="text" id="bettor-name" required autocomplete="off" class="w-full bg-slate-700 text-white px-3 py-2.5 rounded-md border border-slate-600 focus:border-yellow-400 focus:outline-none h-10" placeholder="Enter bettor name...">
+                  <div id="bettor-dropdown" class="hidden absolute z-10 w-full mt-1 bg-slate-700 border border-slate-600 rounded-md max-h-40 overflow-y-auto">
+                    <div id="bettor-list"></div>
+                  </div>
+                </div>
               </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Batter Name</label>
+                <div class="relative">
+                  <input type="text" id="batter-name" required autocomplete="off" class="w-full bg-slate-700 text-white px-3 py-2.5 rounded-md border border-slate-600 focus:border-yellow-400 focus:outline-none h-10" placeholder="Search for player...">
+                  <div id="player-dropdown" class="hidden absolute z-10 w-full mt-1 bg-slate-700 border border-slate-600 rounded-md max-h-60 overflow-y-auto">
+                    <div id="player-loading" class="hidden p-3 text-center text-gray-400">Loading players...</div>
+                    <div id="player-list"></div>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Bet Amount ($)</label>
+                <input type="number" id="bet-amount" required min="0" step="0.01" class="w-full bg-slate-700 text-white px-3 py-2.5 rounded-md border border-slate-600 focus:border-yellow-400 focus:outline-none h-10">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Odds</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">+</span>
+                  <input type="number" id="bet-odds" required min="100" step="1" class="w-full bg-slate-700 text-white pl-8 pr-3 py-2.5 rounded-md border border-slate-600 focus:border-yellow-400 focus:outline-none h-10" placeholder="150">
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Sportsbook</label>
+                <select id="sportsbook" required class="w-full bg-slate-700 text-white px-3 py-2.5 rounded-md border border-slate-600 focus:border-yellow-400 focus:outline-none h-10">
+                  <option value="">Select sportsbook...</option>
+                  <option value="DraftKings">DraftKings</option>
+                  <option value="FanDuel">FanDuel</option>
+                  <option value="BetMGM">BetMGM</option>
+                  <option value="Caesars">Caesars</option>
+                  <option value="BetRivers">BetRivers</option>
+                  <option value="Fanatics">Fanatics</option>
+                  <option value="ESPN BET">ESPN BET</option>
+                </select>
+              </div>
+              <button type="submit" class="w-full bg-yellow-500 text-black font-semibold py-2 rounded-md hover:bg-yellow-400 transition">Add Bet</button>
+            </form>
+          </div>
+
+          <!-- Payout Calculator -->
+          <div class="bg-slate-800 rounded-lg p-6 mb-6 max-w-md mx-auto lg:max-w-none lg:mx-0 lg:mb-0">
+            <h2 class="text-xl font-bold text-yellow-400 mb-4 text-center">Payout Calculator</h2>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Calculate Date</label>
+                <input type="date" id="payout-date" required class="w-full bg-slate-700 text-white px-3 py-2.5 rounded-md border border-slate-600 focus:border-yellow-400 focus:outline-none h-10">
+              </div>
+              <button id="calculate-payouts" class="w-full bg-green-500 text-white font-semibold py-2 rounded-md hover:bg-green-400 transition">Calculate Payouts</button>
+            </div>
+            
+            <!-- Payout Results -->
+            <div id="payout-results" class="hidden mt-6">
+              <h3 class="text-lg font-bold text-yellow-400 mb-3">Payout Results</h3>
+              <div id="payout-summary" class="mb-4 p-3 bg-slate-700 rounded-lg">
+                <div class="text-sm text-gray-300">
+                  <div>Total Bets: <span id="total-bets-count" class="text-white font-semibold">0</span></div>
+                  <div>Total Wagered: <span id="total-wagered-amount" class="text-white font-semibold">$0</span></div>
+                  <div>Total Won: <span id="total-won-amount" class="text-green-400 font-semibold">$0</span></div>
+                  <div>Total Profit: <span id="total-profit-amount" class="text-green-400 font-semibold">$0</span></div>
+                  <div>Unique Bettors: <span id="unique-bettors-count" class="text-white font-semibold">0</span></div>
+                  <div>Pool Payout Per Person: <span id="pool-payout-per-person" class="text-yellow-400 font-semibold">$0</span></div>
+                </div>
+              </div>
+              <div id="payout-breakdown" class="space-y-2"></div>
             </div>
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-300 mb-1">Bet Amount ($)</label>
-            <input type="number" id="bet-amount" required min="0" step="0.01" class="w-full bg-slate-700 text-white px-3 py-2.5 rounded-md border border-slate-600 focus:border-yellow-400 focus:outline-none h-10">
+        </div>
+
+        <!-- Right Column: Bet Lists -->
+        <div class="lg:w-[30rem] lg:space-y-8" id="bets-column">
+          <!-- Open Bets -->
+          <div id="open-bets-section">
+            <h2 class="text-2xl font-bold text-center mb-6 text-yellow-400">Open Bets</h2>
+            <div id="open-bets-list" class="space-y-3"></div>
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-300 mb-1">Odds</label>
-            <div class="relative">
-              <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">+</span>
-              <input type="number" id="bet-odds" required min="100" step="1" class="w-full bg-slate-700 text-white pl-8 pr-3 py-2.5 rounded-md border border-slate-600 focus:border-yellow-400 focus:outline-none h-10" placeholder="150">
+
+          <!-- Settled Bets -->
+          <div id="settled-bets-section" class="hidden mt-8">
+            <div class="flex justify-center items-center gap-4 mb-6">
+              <h2 class="text-2xl font-bold text-yellow-400">Settled Bets</h2>
             </div>
+            <div id="settled-bets-list" class="space-y-3"></div>
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-300 mb-1">Sportsbook</label>
-            <select id="sportsbook" required class="w-full bg-slate-700 text-white px-3 py-2.5 rounded-md border border-slate-600 focus:border-yellow-400 focus:outline-none h-10">
-              <option value="">Select sportsbook...</option>
-              <option value="DraftKings">DraftKings</option>
-              <option value="FanDuel">FanDuel</option>
-              <option value="BetMGM">BetMGM</option>
-              <option value="Caesars">Caesars</option>
-              <option value="BetRivers">BetRivers</option>
-              <option value="Fanatics">Fanatics</option>
-              <option value="ESPN BET">ESPN BET</option>
-            </select>
-          </div>
-          <button type="submit" class="w-full bg-yellow-500 text-black font-semibold py-2 rounded-md hover:bg-yellow-400 transition">Add Bet</button>
-        </form>
-      </div>
 
-      <!-- Payout Calculator -->
-      <div class="bg-slate-800 rounded-lg p-6 mb-6 max-w-md mx-auto">
-        <h2 class="text-xl font-bold text-yellow-400 mb-4 text-center">Payout Calculator</h2>
-        <div class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-300 mb-1">Calculate Date</label>
-            <input type="date" id="payout-date" required class="w-full bg-slate-700 text-white px-3 py-2.5 rounded-md border border-slate-600 focus:border-yellow-400 focus:outline-none h-10">
+          <!-- Show Hidden Button (always visible when there are hidden bets) -->
+          <div id="show-hidden-section" class="hidden mt-6 text-center">
+            <button id="toggle-hidden-bets" class="bg-slate-700 text-white px-4 py-2 rounded hover:bg-slate-600 transition">
+              Show Hidden (<span id="hidden-count">0</span>)
+            </button>
           </div>
-          <button id="calculate-payouts" class="w-full bg-green-500 text-white font-semibold py-2 rounded-md hover:bg-green-400 transition">Calculate Payouts</button>
-        </div>
-        
-        <!-- Payout Results -->
-        <div id="payout-results" class="hidden mt-6">
-          <h3 class="text-lg font-bold text-yellow-400 mb-3">Payout Results</h3>
-          <div id="payout-summary" class="mb-4 p-3 bg-slate-700 rounded-lg">
-            <div class="text-sm text-gray-300">
-              <div>Total Bets: <span id="total-bets-count" class="text-white font-semibold">0</span></div>
-              <div>Total Wagered: <span id="total-wagered-amount" class="text-white font-semibold">$0</span></div>
-              <div>Total Won: <span id="total-won-amount" class="text-green-400 font-semibold">$0</span></div>
-              <div>Total Profit: <span id="total-profit-amount" class="text-green-400 font-semibold">$0</span></div>
-              <div>Unique Bettors: <span id="unique-bettors-count" class="text-white font-semibold">0</span></div>
-              <div>Pool Payout Per Person: <span id="pool-payout-per-person" class="text-yellow-400 font-semibold">$0</span></div>
+
+          <!-- Hidden Bets -->
+          <div id="hidden-bets-section" class="hidden mt-8">
+            <div class="flex justify-center items-center gap-4 mb-6">
+              <h2 class="text-2xl font-bold text-gray-400">Hidden Bets</h2>
+              <button id="hide-hidden-bets" class="bg-slate-700 text-white px-3 py-1 rounded text-sm hover:bg-slate-600 transition">
+                Hide This Section
+              </button>
             </div>
+            <div id="hidden-bets-list" class="space-y-3"></div>
           </div>
-          <div id="payout-breakdown" class="space-y-2"></div>
         </div>
-      </div>
-
-      <!-- Open Bets -->
-      <div id="open-bets-section">
-        <h2 class="text-2xl font-bold text-center mb-6 text-yellow-400">Open Bets</h2>
-        <div id="open-bets-list" class="space-y-3"></div>
-      </div>
-
-      <!-- Settled Bets -->
-      <div id="settled-bets-section" class="hidden mt-8">
-        <div class="flex justify-center items-center gap-4 mb-6">
-          <h2 class="text-2xl font-bold text-yellow-400">Settled Bets</h2>
-        </div>
-        <div id="settled-bets-list" class="space-y-3"></div>
-      </div>
-
-      <!-- Show Hidden Button (always visible when there are hidden bets) -->
-      <div id="show-hidden-section" class="hidden mt-6 text-center">
-        <button id="toggle-hidden-bets" class="bg-slate-700 text-white px-4 py-2 rounded hover:bg-slate-600 transition">
-          Show Hidden (<span id="hidden-count">0</span>)
-        </button>
-      </div>
-
-      <!-- Hidden Bets -->
-      <div id="hidden-bets-section" class="hidden mt-8">
-        <div class="flex justify-center items-center gap-4 mb-6">
-          <h2 class="text-2xl font-bold text-gray-400">Hidden Bets</h2>
-          <button id="hide-hidden-bets" class="bg-slate-700 text-white px-3 py-1 rounded text-sm hover:bg-slate-600 transition">
-            Hide This Section
-          </button>
-        </div>
-        <div id="hidden-bets-list" class="space-y-3"></div>
       </div>
 
       <!-- Confirmation Modal -->
@@ -289,6 +311,11 @@
     <div id="loading-state" class="hidden text-center text-gray-400 mb-6">Loading dingers...</div>
     <div id="error-message" class="hidden text-center text-red-500 font-semibold mb-6">Failed to load data. Please try again.</div>
 
+    <!-- Dinger Data Date Header -->
+    <div id="dinger-date-header" class="hidden text-center mb-4">
+      <h3 class="text-xl font-bold text-yellow-400">Home Runs for <span id="dinger-date-display"></span></h3>
+    </div>
+
     <!-- Summary -->
     <div id="summary-section" class="hidden flex flex-wrap justify-center gap-4 mb-6">
       <div class="bg-slate-800 rounded-lg p-4 text-center">
@@ -306,7 +333,7 @@
     </div>
 
     <!-- Home Runs -->
-    <div id="hr-list" class="hidden space-y-4"></div>
+    <div id="hr-list" class="hidden space-y-4 max-w-4xl mx-auto"></div>
   </main>
 
   <script>
@@ -1379,6 +1406,7 @@
       errorMessage.classList.add('hidden');
       summarySection.classList.add('hidden');
       hrList.classList.add('hidden');
+      document.getElementById('dinger-date-header').classList.add('hidden');
 
       try {
 
@@ -1537,14 +1565,17 @@
         renderSummaryStats(allHomers);
         renderHomeRuns(allHomers);
         updateLastUpdated();
+        updateDingerDateHeader(selectedDate);
 
         loadingState.classList.add('hidden');
         summarySection.classList.remove('hidden');
         hrList.classList.remove('hidden');
         document.getElementById('last-updated').classList.remove('hidden');
+        document.getElementById('dinger-date-header').classList.remove('hidden');
       } catch {
         loadingState.classList.add('hidden');
         errorMessage.classList.remove('hidden');
+        document.getElementById('dinger-date-header').classList.add('hidden');
       }
     }
 
@@ -1724,6 +1755,23 @@
       const timeStr = now.toLocaleString();
       document.getElementById('last-updated').textContent = `Last updated: ${timeStr}`;
     }
+
+    function updateDingerDateHeader(dateStr) {
+      const dateDisplay = document.getElementById('dinger-date-display');
+      if (dateDisplay) {
+        const date = new Date(dateStr + 'T00:00:00');
+        const formattedDate = date.toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+        dateDisplay.textContent = formattedDate;
+      }
+    }
+
+    // Simple sticky positioning - no complex JavaScript needed
+    // The CSS sticky positioning will handle the floating behavior naturally
   </script>
 </body>
 </html>
